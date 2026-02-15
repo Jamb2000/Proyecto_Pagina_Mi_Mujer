@@ -10,11 +10,10 @@
     html,body{margin:0;height:100%;background:#000;overflow:hidden}
     #galaxy-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
     .attribution{position:fixed;left:10px;bottom:10px;font-size:11px;color:#b9a0ff;opacity:.8;background:rgba(0,0,0,.35);padding:6px 8px;border-radius:8px;z-index:10;}
-    .player{position:fixed;left:10px;right:10px;bottom:40px;display:flex;gap:8px;align-items:center;
-             background:rgba(20,15,35,.35);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px;
+    .player{position:fixed;left:10px;right:10px;bottom:40px;display:flex;justify-content: space-between; gap:8px;align-items:center;
+             background:rgba(20,15,35,.35);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 16px;
              backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial;z-index:10;}
-    .player button{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;}
-    .player input[type=file]{display:none}
+    .player button{padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.15);color:#fff;cursor:pointer; font-weight: bold;}
     .pill{position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:6px 12px;border-radius:999px;
           background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial;z-index:10;}
     .error{position:fixed;inset:auto 10px 100px 10px;background:#260015;color:#ffd9f7;border:1px solid #ff8ae5;border-radius:10px;padding:10px;font:12px system-ui;display:none;z-index:10;}
@@ -29,11 +28,8 @@
 <div id="err" class="error"></div>
 
 <div class="player">
-  <button id="playBtn">▶︎</button>
-  <span style="font-size:12px;opacity:.9;line-height:1.4;">Elije tu cancion <br><b>cancion.mp3</b> Detalles Mr<b>💙🌹♥️</b> (Reproductor Mr)</span>
-  <input type="file" id="pickFile" accept="audio/*">
-  <button id="pickBtn">Elegir canción</button>
-  
+  <span style="font-size:12px;opacity:.9;line-height:1.4;"><b>cancion.mp3</b> <br>Detalles Mr<b>💙🌹♥️</b> (Reproductor Mr)</span>
+  <button id="playBtn">▶︎ Reproducir</button>
   <audio id="audio" loop>
     <source src="sonido/cancion.mp3" type="audio/mpeg">
   </audio>
@@ -46,52 +42,45 @@
 const err = document.getElementById('err');
 function showError(msg){ err.textContent = msg; err.style.display='block'; }
 
-// ====== REPRODUCTOR DE AUDIO Y AUTOPLAY ======
+// ====== REPRODUCTOR DE AUDIO SIMPLIFICADO Y AUTOPLAY ======
 const audio = document.getElementById('audio');
 const playBtn = document.getElementById('playBtn');
-const pickBtn = document.getElementById('pickBtn');
-const pickFile = document.getElementById('pickFile');
-
 let audioIniciado = false;
 
-// Truco: Iniciar música al primer toque o clic
-function iniciarMusicaMagica() {
-  if (!audioIniciado) {
-    audio.play().then(() => {
-      playBtn.textContent = '⏸︎';
-      audioIniciado = true;
-    }).catch((e) => console.log("Esperando interacción para reproducir..."));
-  }
-}
-
-document.body.addEventListener('click', iniciarMusicaMagica, { once: true });
-document.body.addEventListener('touchstart', iniciarMusicaMagica, { once: true });
-
+// Función para alternar entre Play y Pausa desde el botón
 playBtn.onclick = async () => {
   try { 
     if (audio.paused) { 
       await audio.play(); 
-      playBtn.textContent='⏸︎'; 
+      playBtn.textContent='⏸︎ Pausar'; 
       audioIniciado = true;
     } else { 
       audio.pause(); 
-      playBtn.textContent='▶︎'; 
+      playBtn.textContent='▶︎ Reproducir'; 
     } 
   }
-  catch(e){ showError('Si no suena, toca “Elegir canción” y selecciona tu MP3.'); }
+  catch(e){ showError('Error al intentar reproducir la música.'); }
 };
 
-pickBtn.onclick = () => pickFile.click();
-pickFile.onchange = () => {
-  if (pickFile.files && pickFile.files[0]) {
-    const url = URL.createObjectURL(pickFile.files[0]);
-    audio.src = url; 
-    audio.play().then(()=> {
-      playBtn.textContent='⏸︎';
+// Función para iniciar la música al cargar o al primer toque
+function iniciarMusicaMagica() {
+  if (!audioIniciado) {
+    audio.play().then(() => {
+      playBtn.textContent = '⏸︎ Pausar';
       audioIniciado = true;
-    }).catch(()=>{});
+    }).catch((e) => {
+      console.log("El navegador bloqueó el autoplay. Esperando que el usuario toque la pantalla...");
+    });
   }
-};
+}
+
+// Intentar autoplay en cuanto la página carga
+window.addEventListener('load', iniciarMusicaMagica);
+
+// Si el navegador lo bloqueó al inicio, esto lo activará al primer clic o toque en la pantalla
+document.body.addEventListener('click', iniciarMusicaMagica, { once: true });
+document.body.addEventListener('touchstart', iniciarMusicaMagica, { once: true });
+
 
 // ====== INICIO DE THREE.JS ======
 try {
@@ -146,8 +135,6 @@ const galaxy = new THREE.Group(); scene.add(galaxy);
 const phrases = ["Pinchecha ✨", " Hermosa 💛", "Mi Bebe", "Mi Cielito 🌌", "Hermosota ✨", "Mi Infinita ♾️", "Mi Todo", "Me Encantas 🥰", " Perla 💫", "Te Amo💛", "Mi Canción Favorita 🎶", "Unica 😊", "Mi Reina 👑", "Mi Amor", "Mi Mundo", "Mi Luz 🌠", "Mi Niña", "Mi Tesoro💛", "Mi Paz", "Te Amo Infinitamente ♾️"];
 const phraseCount = Math.max(phrases.length * 6, 180);
 const arms = 5, radius = 82, maxH = 22;
-
-// ZONA DE SEGURIDAD PARA EL PLANETA
 const safeZone = 25; 
 
 function getSpiralPos(i, totalCount) {
@@ -173,9 +160,6 @@ function makeTextTexture(text, size=48){
   return new THREE.CanvasTexture(c);
 }
 
-// ==========================================
-// PREPARACIÓN DE FOTOS DINÁMICAS
-// ==========================================
 function makeCircularPhotoTexture(img) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 256;
   const ctx = c.getContext('2d');
@@ -273,7 +257,6 @@ function animate(){
   photonRing.rotation.z = now * 0.00018;
   controls.update();
 
-  // ANIMACIÓN DE LAS FOTOS
   photoSprites.forEach(sprite => {
     const data = sprite.userData;
     data.timer += dt;
